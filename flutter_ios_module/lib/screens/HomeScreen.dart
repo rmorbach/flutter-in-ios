@@ -8,11 +8,31 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const platform = const MethodChannel('flutter.ios.functions/login');
+  String _username = "";
 
-  static const platform = const MethodChannel('flutter.ios.functions/logout');
+  @override
+  void initState() {
+    super.initState();
+    platform.setMethodCallHandler((MethodCall methodCall) {
+      print("#### method called ${methodCall.method} arguments: ${methodCall.arguments} #### ");
+        switch (methodCall.method) {
+          case "setUsername":
+            setState(() {
+              _username = methodCall.arguments;
+            });
+            break;
+          default: break;
+        }
+        return null;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (_username == null || _username.isEmpty) {
+      _getUsername();
+    }
     return Container(
         color: Colors.blue,
         child: Scaffold(
@@ -22,20 +42,24 @@ class _HomeScreenState extends State<HomeScreen> {
               IconButton(
                 icon: Icon(Icons.exit_to_app),
                 onPressed: () {
-                  showDialog(context: context,
+                  showDialog(
+                      context: context,
                       builder: (BuildContext context) {
                         return CupertinoAlertDialog(
                           title: Text("Warning"),
                           actions: <Widget>[
                             FlatButton(
-                              onPressed: () {
+                              onPressed: () async {
                                 Navigator.of(context).pop();
-                                platform.invokeMethod("logout");
+                                await platform.invokeMethod("logout");
+                                setState(() {
+                                  _username = "";
+                                });
                               },
-                              child: const Text('Are you sure you want to logout?',
-                              style: TextStyle(
-                                color: Colors.blue
-                              ),),
+                              child: const Text(
+                                'Are you sure you want to logout?',
+                                style: TextStyle(color: Colors.blue),
+                              ),
                             ),
                             FlatButton(
                               onPressed: () {
@@ -45,14 +69,39 @@ class _HomeScreenState extends State<HomeScreen> {
                             )
                           ],
                         );
-                      }
-                  );
+                      });
                 },
               )
             ],
           ),
-          body: Container(),
-        )
+          body: Center(
+            child: Container(
+              child: getGreetingsWidget(),
+            ),
+          ),
+        ));
+  }
+
+  _getUsername() {
+    platform.invokeMethod("getUsername").then((result) {
+      if (result == null) {
+        return;
+      }
+      setState(() {
+        _username = result;
+      });
+    }).catchError((error) {
+      print("Error in flutter $error");
+    });
+  }
+
+  Widget getGreetingsWidget() {
+    if (_username.trim().isEmpty) {
+      return Container();
+    }
+    return Text(
+      "Welcome $_username",
+      style: TextStyle(fontSize: 20, color: Colors.black),
     );
   }
 }

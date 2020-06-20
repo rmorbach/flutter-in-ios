@@ -26,6 +26,7 @@ final class FlutterViewControllerHolder {
         guard let engine = appDelegate.flutterEngine else {
             return
         }
+        engine.run(withEntrypoint: "main")
         // Show flutter screen
         self.viewController = FlutterViewController(engine: engine, nibName: nil, bundle: nil)
     }

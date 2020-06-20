@@ -8,14 +8,22 @@
 
 import UIKit
 import Flutter
+
+protocol LoginViewControllerDelegate: AnyObject {
+    func navigateToHomeScreen(withUsername username: String, password: String)
+}
+
 final class LoginViewController: UIViewController {
+    
+    private weak var delegate: LoginViewControllerDelegate?
     
     override func loadView() {
         view = LoginView(withDelegate: self)
         view.backgroundColor = UIColor(red: 23/255, green: 150/255, blue: 243/255, alpha: 1.0)
     }
     
-    init() {
+    init(withDelegate delegate: LoginViewControllerDelegate?) {
+        self.delegate = delegate
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -51,52 +59,6 @@ extension LoginViewController: LoginViewDelegate {
             showAlert(text: "Please provide your password")
             return
         }
-        navigateToFlutterScreen()
+        delegate?.navigateToHomeScreen(withUsername: user, password: password)
     }
-}
-
-extension LoginViewController {
-    func navigateToFlutterScreen() {
-        // Show flutter screen
-        guard let flutterViewController = FlutterViewControllerHolder.shared.flutterViewController else {
-            print("Unable to create flutterViewController")
-            return
-        }
-        flutterViewController.title = "Flutter Home Screen"
-        
-        addLogoutChannel(forBinaryMessenger: flutterViewController.binaryMessenger)
-        
-        self.navigationController?.pushAndUpdateNavigationStack(withViewController: flutterViewController)
-    }
-    
-    func pushAndUpdateNavigationStack(withViewController viewController: UIViewController) {
-        self.navigationController?.pushViewController(viewController, animated: true)
-        self.navigationController?.viewControllers = [viewController]
-    }
-    
-    func addLogoutChannel(forBinaryMessenger binaryMessenger: FlutterBinaryMessenger) {
-        
-        // Configure in order to receive messages from flutter module
-        let logoutChannel = FlutterMethodChannel(name: "flutter.ios.functions/logout", binaryMessenger: binaryMessenger)
-        logoutChannel.setMethodCallHandler { (call, result) in
-            let firstWindow = UIApplication.shared.windows.first
-            guard let naviController = firstWindow?.rootViewController as? UINavigationController else {
-                return
-            }
-            switch call.method {
-            case "logout":
-                let loginViewController = LoginViewController()
-                naviController.pushAndUpdateNavigationStack(withViewController: loginViewController)
-                result(nil)
-            default: break
-            }
-        }
-    }
-}
-
-extension UINavigationController {
-    func pushAndUpdateNavigationStack(withViewController viewController: UIViewController) {
-            pushViewController(viewController, animated: true)
-           viewControllers = [viewController]
-       }
 }
