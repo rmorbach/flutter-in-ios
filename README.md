@@ -8,10 +8,15 @@ This sample uses the CocoaPods strategy in order to embebbed a Flutter module in
 1. Navigate to `FlutteriOS` folder and run:
 ```bash
 $ pod install
-``` 
+```
+
+Be aware that every modification made in the Flutter module must be followed by a `pod install` command.
+ 
 2. Open `FlutteriOS.xcworkspace` file and build it normally.
 
 # Troubleshooting
 
 If you see a *Permission denied* error while building the application, try the solution of editing `xcode_backend.sh` file, as described in [here](https://github.com/flutter/flutter/issues/40146).
+
+
 
